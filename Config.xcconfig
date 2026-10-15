@@ -1,0 +1,6 @@
+// Config.xcconfig — variables de entorno (equivalente a .env). NO se sube a git.
+// Formato: CLAVE = valor (sin comillas). Para URLs usa https:/$()/dominio.com
+// (en .xcconfig "//" es comentario).
+
+API_BASE_URL = https:/$()/api.ejemplo.com
+API_KEY = tu_api_key_aqui
