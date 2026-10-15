@@ -1,0 +1,7 @@
+# Variables de entorno (equivalente a .env)
+caritas_admin/Config.xcconfig
+
+# Xcode
+xcuserdata/
+DerivedData/
+.DS_Store
