@@ -8,24 +8,12 @@
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* caritas_admin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = caritas_admin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		980FD76030851F3800C2F4CA /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		000000000000000000000011 /* Exceptions for "caritas_admin" folder in "caritas_admin" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Config.xcconfig,
-			);
-			target = 000000000000000100000000 /* caritas_admin */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		000000000000000000000010 /* caritas_admin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				000000000000000000000011 /* Exceptions for "caritas_admin" folder in "caritas_admin" target */,
-			);
 			path = caritas_admin;
 			sourceTree = "<group>";
 		};
@@ -45,6 +33,7 @@
 			children = (
 				000000000000000000000010 /* caritas_admin */,
 				000000000000000000000020 /* Products */,
+				980FD76030851F3800C2F4CA /* Config.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -262,8 +251,7 @@
 		};
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "caritas_admin" */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = 000000000000000000000010 /* caritas_admin */;
-			baseConfigurationReferenceRelativePath = Config.xcconfig;
+			baseConfigurationReference = 980FD76030851F3800C2F4CA /* Config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -302,8 +290,7 @@
 		};
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "caritas_admin" */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = 000000000000000000000010 /* caritas_admin */;
-			baseConfigurationReferenceRelativePath = Config.xcconfig;
+			baseConfigurationReference = 980FD76030851F3800C2F4CA /* Config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
