@@ -1,6 +1,5 @@
 import Foundation
 
-/// Acceso a las variables definidas en Config.xcconfig (vía Info.plist).
 enum Env {
     static let apiBaseURL = value(for: "API_BASE_URL")
     static let apiKey = value(for: "API_KEY")
