@@ -1,0 +1,3 @@
+// Copia este archivo como Config.xcconfig y ajusta la URL a tu API.
+// $() conserva las dos diagonales de http:// dentro de un xcconfig.
+API_BASE_URL = http:/$()/127.0.0.1:3001

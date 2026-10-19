@@ -1,33 +1,47 @@
 import SwiftUI
 
 struct ContentView: View {
+    private enum Seccion: String, CaseIterable {
+        case resumen = "Resumen"
+        case llamadas = "Llamadas"
+        case donantes = "Donantes"
+        case casos = "Casos"
+        case usuarios = "Usuarios"
+    }
+
+    @State private var seleccion: Seccion = .resumen
+
     var body: some View {
-        TabView {
-            ResumenView()
-                .tabItem {
-                    Label("Resumen", systemImage: "chart.bar.fill")
+        VStack(spacing: 0) {
+            HStack(spacing: 2) {
+                ForEach(Seccion.allCases, id: \.self) { seccion in
+                    Button(seccion.rawValue) { seleccion = seccion }
+                        .font(.subheadline.bold())
+                        .foregroundColor(seleccion == seccion ? .white : Palette.textoPrincipal)
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: 36)
+                        .background(seleccion == seccion ? Palette.acento : .clear)
+                        .clipShape(.capsule)
+                        .buttonStyle(.plain)
                 }
+            }
+            .padding(4)
+            .background(Palette.superficie)
+            .clipShape(.capsule)
+            .padding(.top, 12)
 
-            LlamadasView()
-                .tabItem {
-                    Label("Llamadas", systemImage: "phone.fill")
+            Group {
+                switch seleccion {
+                case .resumen: ResumenView()
+                case .llamadas: LlamadasView()
+                case .donantes: DonantesView()
+                case .casos: CasosView()
+                case .usuarios: UsuariosView()
                 }
-
-            DonantesView()
-                .tabItem {
-                    Label("Donantes", systemImage: "person.2.fill")
-                }
-
-            CasosView()
-                .tabItem {
-                    Label("Casos", systemImage: "heart.text.square.fill")
-                }
-
-            AjustesView()
-                .tabItem {
-                    Label("Ajustes", systemImage: "gearshape.fill")
-                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(Palette.fondo.ignoresSafeArea())
         .tint(Palette.acento)
     }
 }
