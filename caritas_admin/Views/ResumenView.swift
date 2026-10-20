@@ -1,21 +1,46 @@
+import Charts
 import SwiftUI
 
 struct ResumenView: View {
     @State private var resumen: ResumenAdmin?
+    @State private var casos: [Caso] = []
+    @State private var metaSeleccionada: Double?
     @State private var cargando = false
     @State private var error: String?
+    @State private var errorCasos: String?
 
-    private let columnas = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
+    private let columnas = [
+        GridItem(.flexible(), spacing: 16, alignment: .top),
+        GridItem(.flexible(), spacing: 16, alignment: .top)
+    ]
+
+    private struct SegmentoRiesgo: Identifiable {
+        let id: String
+        let cantidad: Int
+        let color: Color
+    }
 
     private func cargar() async {
         cargando = true
         error = nil
+        errorCasos = nil
         do {
             resumen = try await AdminService.resumen()
         } catch let fallo as APIError {
             error = fallo.mensaje
         } catch {
             self.error = APIError.desconocido.mensaje
+        }
+
+        do {
+            casos = try await CasosService.obtenerCasos()
+            metaSeleccionada = nil
+        } catch let fallo as APIError {
+            casos = []
+            errorCasos = fallo.mensaje
+        } catch {
+            casos = []
+            errorCasos = APIError.desconocido.mensaje
         }
         cargando = false
     }
@@ -64,10 +89,10 @@ struct ResumenView: View {
                         .foregroundColor(Palette.textoPrincipal)
                 }
                 tarjeta {
-                    Text("LLAMADAS COMPLETADAS")
+                    Text("LLAMADAS COMPLETADAS · HISTÓRICO")
                         .font(.caption.bold())
                         .foregroundColor(Palette.textoSecundario)
-                    Text(datos.callsByResponsible.reduce(0) { $0 + $1.callCount }.formatted())
+                    Text((datos.completedCallsTotal ?? datos.callOutcomes.reduce(0) { $0 + $1.callCount }).formatted())
                         .font(.title.bold())
                 }
                 tarjeta {
@@ -80,86 +105,146 @@ struct ResumenView: View {
             }
 
             LazyVGrid(columns: columnas, alignment: .leading, spacing: 16) {
-                seccion("RECAUDACIÓN POR SEMANA") {
-                    let semanas = datos.fundraising.weeklyTotals
-                    let maximo = max(semanas.compactMap { Double($0.total) }.max() ?? 0, 1)
-                    if semanas.isEmpty {
-                        vacio("No hay semanas registradas.")
-                    } else {
-                        HStack(alignment: .bottom, spacing: 12) {
-                            ForEach(Array(semanas.enumerated()), id: \.element.id) { indice, semana in
-                                VStack(spacing: 6) {
-                                    Text(pesos(semana.total))
-                                        .font(.caption2.bold())
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.7)
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .fill(Palette.acento)
-                                        .frame(height: max(4, 105 * (Double(semana.total) ?? 0) / maximo))
-                                    Text("S\(indice + 1)")
-                                        .font(.caption)
-                                        .foregroundColor(Palette.textoSecundario)
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
-                        }
-                        .frame(height: 155, alignment: .bottom)
-                    }
+                seccion("RIESGO SEGÚN ÚLTIMA DONACIÓN") {
+                    donaRiesgo(datos.donorRisk)
                 }
-
-                seccion("RESULTADOS DE LLAMADAS · HISTÓRICO") {
-                    let total = datos.callOutcomes.reduce(0) { $0 + $1.callCount }
-                    if total == 0 {
-                        vacio("No hay resultados registrados.")
-                    } else {
-                        ForEach(datos.callOutcomes) { resultado in
-                            fila(resultado.outcome.capitalized, cantidad: resultado.callCount,
-                                 total: total, color: Palette.acento)
-                        }
-                    }
+                seccion("LLAMADAS COMPLETADAS POR RESPONSABLE · HISTÓRICO") {
+                    llamadasPorResponsable(datos.callsByResponsible)
                 }
+            }
 
-                seccion("LLAMADAS POR RESPONSABLE · HISTÓRICO") {
-                    let maximo = datos.callsByResponsible.map(\.callCount).max() ?? 0
-                    if datos.callsByResponsible.isEmpty {
-                        vacio("No hay llamadas completadas.")
-                    } else {
-                        ForEach(datos.callsByResponsible) { persona in
-                            VStack(alignment: .leading, spacing: 5) {
-                                HStack {
-                                    Text(persona.userName)
-                                        .lineLimit(1)
-                                    Spacer()
-                                    Text("\(persona.callCount) llamadas · \(persona.promiseCount) promesas vinculadas")
-                                        .foregroundColor(Palette.textoSecundario)
-                                }
-                                .font(.subheadline)
-                                ProgressView(value: Double(persona.callCount), total: Double(max(maximo, 1)))
-                                    .tint(Palette.acento)
-                            }
-                            .padding(.vertical, 4)
+            seccion("META VS AVANCE POR CAUSA") {
+                avancePorCausa()
+            }
+
+            seccion("RESULTADOS DE LLAMADAS · HISTÓRICO") {
+                if datos.callOutcomes.isEmpty {
+                    vacio("No hay resultados registrados.")
+                } else {
+                    ForEach(datos.callOutcomes) { resultado in
+                        HStack {
+                            Text(resultado.outcome.capitalized)
+                            Spacer()
+                            Text(resultado.callCount.formatted())
+                                .foregroundColor(Palette.textoSecundario)
                         }
-                    }
-                }
-
-                seccion("DISTRIBUCIÓN DE RIESGO") {
-                    let riesgo = datos.donorRisk
-                    if riesgo.total == 0 {
-                        vacio("No hay donantes registrados.")
-                    } else {
-                        fila("Riesgo bajo", cantidad: riesgo.green, total: riesgo.total,
-                             color: Palette.colorRiesgo("Bajo"))
-                        fila("Riesgo medio", cantidad: riesgo.yellow, total: riesgo.total,
-                             color: Palette.colorRiesgo("Medio"))
-                        fila("Riesgo alto", cantidad: riesgo.red, total: riesgo.total,
-                             color: Palette.colorRiesgo("Alto"))
+                        .font(.subheadline)
                     }
                 }
             }
+
             if let error {
                 Text(error)
                     .foregroundColor(Palette.error)
                     .font(.subheadline)
+            }
+        }
+    }
+
+    private func donaRiesgo(_ riesgo: ResumenAdmin.Riesgo) -> some View {
+        let segmentos = [
+            SegmentoRiesgo(id: "Bajo", cantidad: riesgo.green, color: Palette.colorRiesgo("Bajo")),
+            SegmentoRiesgo(id: "Medio", cantidad: riesgo.yellow, color: Palette.colorRiesgo("Medio")),
+            SegmentoRiesgo(id: "Alto", cantidad: riesgo.red, color: Palette.colorRiesgo("Alto"))
+        ]
+        return VStack(alignment: .leading, spacing: 12) {
+            if riesgo.total == 0 {
+                vacio("No hay donantes registrados.")
+            } else {
+                Chart(segmentos) { segmento in
+                    SectorMark(angle: .value("Donantes", segmento.cantidad),
+                               innerRadius: .ratio(0.62), angularInset: 2)
+                        .foregroundStyle(segmento.color)
+                }
+                .chartLegend(.hidden)
+                .frame(height: 220)
+                .overlay {
+                    VStack(spacing: 2) {
+                        Text(riesgo.total.formatted()).font(.title.bold())
+                        Text("donantes").font(.caption).foregroundColor(Palette.textoSecundario)
+                    }
+                }
+                ForEach(segmentos) { segmento in
+                    HStack {
+                        Circle().fill(segmento.color).frame(width: 9, height: 9)
+                        Text("Riesgo \(segmento.id.lowercased())")
+                        Spacer()
+                        Text("\(segmento.cantidad) · \(Int(Double(segmento.cantidad) / Double(riesgo.total) * 100))%")
+                            .foregroundColor(Palette.textoSecundario)
+                    }
+                    .font(.subheadline)
+                }
+            }
+        }
+    }
+
+    private func llamadasPorResponsable(_ responsables: [ResumenAdmin.Responsable]) -> some View {
+        let ordenados = responsables.sorted { $0.callCount > $1.callCount }
+        let maximo = ordenados.first?.callCount ?? 0
+        let lideres = ordenados.filter { $0.callCount == maximo }.map(\.userName).joined(separator: ", ")
+        return VStack(alignment: .leading, spacing: 12) {
+            if ordenados.isEmpty {
+                vacio("No hay llamadas completadas con responsable.")
+            } else {
+                Chart(ordenados) { persona in
+                    RuleMark(xStart: .value("Inicio", 0),
+                             xEnd: .value("Llamadas", persona.callCount),
+                             y: .value("Responsable", persona.userName))
+                        .foregroundStyle(Palette.acento.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 3))
+                    PointMark(x: .value("Llamadas", persona.callCount),
+                              y: .value("Responsable", persona.userName))
+                        .foregroundStyle(Palette.acento)
+                        .symbolSize(110)
+                        .annotation(position: .trailing) {
+                            Text(persona.callCount.formatted()).font(.caption.bold())
+                        }
+                }
+                .chartXScale(domain: 0...(maximo + 3))
+                .chartXAxisLabel("Llamadas completadas")
+                .frame(height: max(130, CGFloat(ordenados.count) * 65))
+                Text("Más llamadas: \(lideres) (\(maximo))")
+                    .font(.subheadline)
+                    .foregroundColor(Palette.textoSecundario)
+            }
+        }
+    }
+
+    private func avancePorCausa() -> some View {
+        let validas = casos.filter { $0.meta > 0 }
+        let metaMaxima = max(validas.map(\.meta).max() ?? 0, 1)
+        let avanceMaximo = max(validas.map { $0.recaudado / $0.meta * 100 }.max() ?? 0, 20)
+        let seleccionada = metaSeleccionada.flatMap { meta in
+            validas.min { abs($0.meta - meta) < abs($1.meta - meta) }
+        }
+        return VStack(alignment: .leading, spacing: 12) {
+            if let errorCasos {
+                vacio(errorCasos)
+            } else if validas.isEmpty {
+                vacio("No hay causas con una meta registrada.")
+            } else {
+                Chart(validas) { caso in
+                    PointMark(x: .value("Meta", caso.meta),
+                              y: .value("Avance", caso.recaudado / caso.meta * 100))
+                        .foregroundStyle(Palette.colorCaso(caso.id))
+                        .symbolSize(130)
+                }
+                .chartXScale(domain: 0...(metaMaxima * 1.1))
+                .chartYScale(domain: 0...(avanceMaximo * 1.1))
+                .chartXAxisLabel("Meta (MXN)")
+                .chartYAxisLabel("Avance (%)")
+                .chartXSelection(value: $metaSeleccionada)
+                .frame(height: 300)
+
+                if let seleccionada {
+                    Text("\(seleccionada.nombre): \(formatoPesos(seleccionada.recaudado)) de \(formatoPesos(seleccionada.meta)) (\(seleccionada.porcentaje)%)")
+                        .font(.subheadline)
+                        .foregroundColor(Palette.textoPrincipal)
+                } else {
+                    Text("Toca un punto para ver la causa y sus montos.")
+                        .font(.subheadline)
+                        .foregroundColor(Palette.textoSecundario)
+                }
             }
         }
     }
@@ -180,22 +265,6 @@ struct ResumenView: View {
             .padding(20)
             .background(Palette.superficie)
             .clipShape(.rect(cornerRadius: 16))
-    }
-
-    private func fila(_ titulo: String, cantidad: Int, total: Int, color: Color) -> some View {
-        VStack(spacing: 6) {
-            HStack {
-                Circle().fill(color).frame(width: 7, height: 7)
-                Text(titulo).lineLimit(1)
-                Spacer()
-                Text(cantidad.formatted()).foregroundColor(Palette.textoSecundario)
-                Text("\(Int(Double(cantidad) / Double(max(total, 1)) * 100))%")
-                    .bold()
-            }
-            .font(.subheadline)
-            ProgressView(value: Double(cantidad), total: Double(max(total, 1)))
-                .tint(color)
-        }
     }
 
     private func vacio(_ texto: String) -> some View {

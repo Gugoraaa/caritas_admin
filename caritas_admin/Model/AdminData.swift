@@ -59,12 +59,14 @@ struct ResumenAdmin: Decodable {
     let period: Periodo
     let fundraising: Recaudacion
     let callOutcomes: [Resultado]
+    let completedCallsTotal: Int?
     let callsByResponsible: [Responsable]
     let donorRisk: Riesgo
 
     enum CodingKeys: String, CodingKey {
         case period, fundraising
         case callOutcomes = "call_outcomes"
+        case completedCallsTotal = "completed_calls_total"
         case callsByResponsible = "calls_by_responsible"
         case donorRisk = "donor_risk"
     }
