@@ -4,7 +4,6 @@ import SwiftUI
 struct ResumenView: View {
     @State private var resumen: ResumenAdmin?
     @State private var casos: [Caso] = []
-    @State private var metaSeleccionada: Double?
     @State private var cargando = false
     @State private var error: String?
     @State private var errorCasos: String?
@@ -34,7 +33,6 @@ struct ResumenView: View {
 
         do {
             casos = try await CasosService.obtenerCasos()
-            metaSeleccionada = nil
         } catch let fallo as APIError {
             casos = []
             errorCasos = fallo.mensaje
@@ -214,9 +212,6 @@ struct ResumenView: View {
         let validas = casos.filter { $0.meta > 0 }
         let metaMaxima = max(validas.map(\.meta).max() ?? 0, 1)
         let avanceMaximo = max(validas.map { $0.recaudado / $0.meta * 100 }.max() ?? 0, 20)
-        let seleccionada = metaSeleccionada.flatMap { meta in
-            validas.min { abs($0.meta - meta) < abs($1.meta - meta) }
-        }
         return VStack(alignment: .leading, spacing: 12) {
             if let errorCasos {
                 vacio(errorCasos)
@@ -228,22 +223,34 @@ struct ResumenView: View {
                               y: .value("Avance", caso.recaudado / caso.meta * 100))
                         .foregroundStyle(Palette.colorCaso(caso.id))
                         .symbolSize(130)
+                        .annotation(position: .top) {
+                            Text(caso.clave).font(.caption2.bold())
+                        }
                 }
                 .chartXScale(domain: 0...(metaMaxima * 1.1))
                 .chartYScale(domain: 0...(avanceMaximo * 1.1))
                 .chartXAxisLabel("Meta (MXN)")
                 .chartYAxisLabel("Avance (%)")
-                .chartXSelection(value: $metaSeleccionada)
                 .frame(height: 300)
 
-                if let seleccionada {
-                    Text("\(seleccionada.nombre): \(formatoPesos(seleccionada.recaudado)) de \(formatoPesos(seleccionada.meta)) (\(seleccionada.porcentaje)%)")
-                        .font(.subheadline)
-                        .foregroundColor(Palette.textoPrincipal)
-                } else {
-                    Text("Toca un punto para ver la causa y sus montos.")
-                        .font(.subheadline)
-                        .foregroundColor(Palette.textoSecundario)
+                LazyVGrid(columns: columnas, alignment: .leading, spacing: 10) {
+                    ForEach(validas) { caso in
+                        HStack(alignment: .top, spacing: 8) {
+                            Circle()
+                                .fill(Palette.colorCaso(caso.id))
+                                .frame(width: 9, height: 9)
+                                .padding(.top, 5)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(caso.clave) · \(caso.nombreCorto)")
+                                    .font(.subheadline)
+                                    .foregroundColor(Palette.textoPrincipal)
+                                Text("\(formatoPesos(caso.recaudado)) de \(formatoPesos(caso.meta)) · \(caso.porcentaje)%")
+                                    .font(.caption)
+                                    .foregroundColor(Palette.textoSecundario)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
         }
