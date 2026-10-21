@@ -1,11 +1,9 @@
 import Foundation
 
-// "$1,000" — sin decimales, como se muestra en las tablas
 func formatoPesos(_ monto: Double) -> String {
     return "$" + monto.formatted(.number.precision(.fractionLength(0)))
 }
 
-// "Sergio Alonso Treviño Garza" -> "SA"
 func iniciales(_ nombre: String) -> String {
     let palabras = nombre.split(separator: " ")
     var resultado = ""
@@ -17,7 +15,6 @@ func iniciales(_ nombre: String) -> String {
     return resultado.uppercased()
 }
 
-// El API manda fechas sin zona horaria: "2026-03-10T00:00:00"
 func fechaDesdeAPI(_ texto: String) -> Date? {
     let formato = DateFormatter()
     formato.locale = Locale(identifier: "en_US_POSIX")
@@ -25,7 +22,13 @@ func fechaDesdeAPI(_ texto: String) -> Date? {
     return formato.date(from: String(texto.prefix(19)))
 }
 
-// "10 mar 2026"
+func fechaFinDesdeAPI(_ texto: String) -> Date? {
+    let formato = DateFormatter()
+    formato.locale = Locale(identifier: "en_US_POSIX")
+    formato.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+    return formato.date(from: texto)
+}
+
 func formatoFecha(_ fecha: Date) -> String {
     let formato = DateFormatter()
     formato.locale = Locale(identifier: "es_MX")
@@ -33,7 +36,14 @@ func formatoFecha(_ fecha: Date) -> String {
     return formato.string(from: fecha).replacingOccurrences(of: ".", with: "")
 }
 
-// "Octubre 2026"
+func formatoMes(_ fecha: Date) -> String {
+    let formato = DateFormatter()
+    formato.locale = Locale(identifier: "es_MX")
+    formato.timeZone = TimeZone(identifier: "UTC")
+    formato.dateFormat = "MMMM yyyy"
+    return formato.string(from: fecha)
+}
+
 func mesActual() -> String {
     let formato = DateFormatter()
     formato.locale = Locale(identifier: "es_MX")
