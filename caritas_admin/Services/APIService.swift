@@ -26,23 +26,19 @@ enum APIError: Error {
     }
 }
 
-// GET compartido por los servicios: arma la URL, manda el token y decodifica.
 struct APIService {
 
     static func get<T: Decodable>(_ ruta: String) async throws -> T {
-        // 1. Validar URL
         guard let url = URL(string: Env.apiBaseURL + ruta) else {
             throw APIError.desconocido
         }
 
-        // 2. Configurar la petición con el token, si hay sesión
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let token = KeychainHelper.leerToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
-        // 3. Realizar la petición asíncrona
         let data: Data
         let response: URLResponse
         do {
@@ -51,14 +47,12 @@ struct APIService {
             throw APIError.sinConexion
         }
 
-        // 4. Validar la respuesta HTTP
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.desconocido
         }
 
         switch httpResponse.statusCode {
         case 200...299:
-            // 5. Decodificar de JSON a estructura Swift
             do {
                 return try JSONDecoder().decode(T.self, from: data)
             } catch {
@@ -66,7 +60,6 @@ struct APIService {
                 throw APIError.desconocido
             }
         case 401:
-            // Token inválido o expirado: se cierra la sesión y la app regresa a Login
             UserSessionHelper.cerrarSesion()
             throw APIError.sinAutenticacion
         case 403:

@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Botón tipo "pastilla" para los filtros de la pantalla de Donantes
 struct ChipFiltro: View {
     var texto: String
     var seleccionado: Bool

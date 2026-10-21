@@ -1,17 +1,15 @@
 import SwiftUI
 
-// Paleta centralizada: todos los colores de la app viven aquí.
-// Contraste verificado (WCAG): todos los pares texto/fondo son >= 4.5:1.
 struct Palette {
     static let fondo           = Color(red: 242/255, green: 242/255, blue: 247/255)
     static let superficie      = Color(red: 255/255, green: 255/255, blue: 255/255)
     static let acento          = Color(red:  37/255, green:  99/255, blue: 235/255)
+    static let acentoClaro     = Color(red: 219/255, green: 234/255, blue: 254/255)
     static let textoPrincipal  = Color(red:  17/255, green:  17/255, blue:  17/255)
     static let textoSecundario = Color(red: 110/255, green: 110/255, blue: 115/255)
     static let chip            = Color(red: 229/255, green: 229/255, blue: 234/255)
     static let error           = Color(red: 185/255, green:  28/255, blue:  28/255)
 
-    // Colores de avatar; se elige uno según el id del donante
     static let avatares = [
         Color(red:  67/255, green:  56/255, blue: 202/255),
         Color(red: 126/255, green:  34/255, blue: 206/255),
@@ -27,8 +25,6 @@ struct Palette {
         Color(red: 204/255, green: 251/255, blue: 241/255)
     ]
 
-    // Color de cada caso según su id (1 = naranja, 2 = azul, 3 = rojo, 4 = índigo...).
-    // Con el módulo, cualquier id nuevo del API cae en un color de la lista.
     static let casos = [
         Color(red: 194/255, green:  65/255, blue:  12/255),
         Color(red:  29/255, green:  78/255, blue: 216/255),
@@ -46,7 +42,6 @@ struct Palette {
         Color(red: 204/255, green: 251/255, blue: 241/255)
     ]
 
-    // Posición en la lista; el segundo módulo evita índices negativos
     private static func indiceCaso(_ id: Int) -> Int {
         return ((id - 1) % casos.count + casos.count) % casos.count
     }

@@ -4,7 +4,7 @@ struct Usuario: Codable {
     var id: Int
     var name: String
     var email: String
-    var role: String   // "admin", "coordinador"...
+    var role: String
 }
 
 struct LoginRequest: Codable {

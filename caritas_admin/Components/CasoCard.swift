@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Tarjeta de un caso en la pantalla de Casos
 struct CasoCard: View {
     var caso: Caso
 
@@ -29,7 +28,6 @@ struct CasoCard: View {
                 .font(.body)
                 .foregroundColor(Palette.textoPrincipal)
 
-            // Avance hacia la meta
             VStack(spacing: 10) {
                 ProgressView(value: min(caso.recaudado, caso.meta), total: caso.meta)
                     .tint(Palette.colorCaso(caso.id))

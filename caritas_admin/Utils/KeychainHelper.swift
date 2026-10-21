@@ -1,7 +1,6 @@
 import Foundation
 import Security
 
-// El token de sesión es información sensible: va en el Keychain, no en UserDefaults.
 struct KeychainHelper {
     private static let servicio = "com.caritas.admin"
     private static let cuenta = "token"
@@ -15,13 +14,10 @@ struct KeychainHelper {
     }
 
     static func guardarToken(_ token: String) {
-        // 1. Convertir a binario (Data)
         guard let data = token.data(using: .utf8) else { return }
 
-        // 2. Borrar el registro previo: el Keychain no sobrescribe solo
         SecItemDelete(consultaBase() as CFDictionary)
 
-        // 3. Guardar
         var consulta = consultaBase()
         consulta[kSecValueData as String] = data
         consulta[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
