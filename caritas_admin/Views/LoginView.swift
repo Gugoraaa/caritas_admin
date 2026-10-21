@@ -31,9 +31,12 @@ struct LoginView: View {
                     }
 
                     VStack(spacing: 12) {
-                        // Sin modificadores exclusivos de iOS: el target también compila para macOS
                         TextField("Correo electrónico", text: $email)
                             .textContentType(.username)
+                        #if os(iOS)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                        #endif
                             .autocorrectionDisabled()
                             .padding(.horizontal, 16)
                             .frame(minHeight: 52)
@@ -82,7 +85,6 @@ struct LoginView: View {
     }
 
     func iniciarSesion() async {
-        // En minúsculas por si el teclado puso la primera letra en mayúscula
         let correo = email.trimmingCharacters(in: .whitespaces).lowercased()
 
         if correo.isEmpty {
@@ -107,7 +109,6 @@ struct LoginView: View {
         do {
             let respuesta = try await AuthService.login(email: correo, password: password)
             isLoading = false
-            // RaizView detecta la sesión activa y muestra las pestañas
             UserSessionHelper.iniciarSesion(token: respuesta.token, usuario: respuesta.user)
         } catch let error as APIError {
             isLoading = false
