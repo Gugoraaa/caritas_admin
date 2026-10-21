@@ -1,10 +1,8 @@
 import SwiftUI
 
-// Un renglón de la tabla de Donantes
 struct DonanteRow: View {
     var donante: Donante
 
-    // "Anáhuac · SPEI"; si no hay colonia, solo el método
     var subtitulo: String {
         if let colonia = donante.colonia {
             return "\(colonia) · \(donante.metodoPago)"
@@ -14,13 +12,7 @@ struct DonanteRow: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Avatar con iniciales
-            Text(iniciales(donante.nombre))
-                .font(.headline)
-                .foregroundColor(Palette.avatares[donante.id % Palette.avatares.count])
-                .frame(width: 44, height: 44)
-                .background(Palette.avataresClaros[donante.id % Palette.avataresClaros.count])
-                .clipShape(.circle)
+            AvatarDonante(nombre: donante.nombre, donanteId: donante.id, tamano: 44)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(donante.nombre)
@@ -55,6 +47,10 @@ struct DonanteRow: View {
 
             RiesgoBadge(riesgo: donante.riesgo)
                 .frame(width: 90, alignment: .trailing)
+
+            Image(systemName: "chevron.right")
+                .foregroundColor(Palette.textoSecundario)
+                .frame(width: 12)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
