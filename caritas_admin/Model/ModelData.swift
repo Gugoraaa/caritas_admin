@@ -1,7 +1,5 @@
 import Foundation
 
-// Datos de ejemplo solo para los #Preview; la app usa GET /causas y GET /admin/donors.
-
 let casosEjemplo = [
     Caso(id: 1, clave: "CO", nombre: "Comedor Comunitario San Bernabé", nombreCorto: "Comedor",
          beneficiarios: "240 familias de la zona norte",

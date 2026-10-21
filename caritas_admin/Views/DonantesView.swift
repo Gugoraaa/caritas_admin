@@ -4,8 +4,6 @@ struct DonantesView: View {
     @State private var busqueda = ""
     @State private var filtroRiesgo = "Todos"
     @State private var filtroMetodo = "Todos"
-    // nil = "Todos". Se guarda el id del caso (no el nombre) para que dos
-    // casos con el mismo nombre corto no se mezclen.
     @State private var filtroCaso: Int? = nil
 
     @State private var donantes: [Donante] = []
@@ -16,13 +14,11 @@ struct DonantesView: View {
     let opcionesRiesgo = ["Todos", "Bajo", "Medio", "Alto"]
     let opcionesMetodo = ["Todos", "Efectivo", "SPEI"]
 
-    // Un chip del filtro CASO: muestra el nombre corto, guarda el id
     struct OpcionCaso: Identifiable {
         var id: Int
         var nombre: String
     }
 
-    // Casos que aparecen en la respuesta, ordenados por id y sin repetir
     var opcionesCaso: [OpcionCaso] {
         var opciones: [OpcionCaso] = []
         let ordenados = donantes.sorted { ($0.casoId ?? 0) < ($1.casoId ?? 0) }
@@ -34,7 +30,6 @@ struct DonantesView: View {
         return opciones
     }
 
-    // Lista que se muestra: aplica búsqueda y los tres filtros
     var donantesFiltrados: [Donante] {
         return donantes.filter { donante in
             let coincideBusqueda = busqueda.isEmpty
@@ -61,116 +56,120 @@ struct DonantesView: View {
     }
 
     var body: some View {
-        ZStack {
-            Palette.fondo
-                .ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                Palette.fondo
+                    .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Encabezado
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Donantes")
-                            .font(.largeTitle)
-                            .bold()
-                            .foregroundColor(Palette.textoPrincipal)
-                        Spacer()
-                        Text(mesActual())
-                            .font(.title3)
-                            .foregroundColor(Palette.textoSecundario)
-                    }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("Donantes")
+                                .font(.largeTitle)
+                                .bold()
+                                .foregroundColor(Palette.textoPrincipal)
+                            Spacer()
+                            Text(mesActual())
+                                .font(.title3)
+                                .foregroundColor(Palette.textoSecundario)
+                        }
 
-                    // Búsqueda
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(Palette.textoSecundario)
-                        TextField("Buscar por nombre o colonia", text: $busqueda)
-                            .autocorrectionDisabled()
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: 48)
-                    .background(Palette.chip)
-                    .clipShape(.rect(cornerRadius: 12))
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(Palette.textoSecundario)
+                            TextField("Buscar por nombre o colonia", text: $busqueda)
+                                .autocorrectionDisabled()
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(minHeight: 48)
+                        .background(Palette.chip)
+                        .clipShape(.rect(cornerRadius: 12))
 
-                    // Filtros
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 10) {
-                                etiquetaFiltro("RIESGO")
-                                ForEach(opcionesRiesgo, id: \.self) { opcion in
-                                    ChipFiltro(texto: opcion, seleccionado: filtroRiesgo == opcion) {
-                                        filtroRiesgo = opcion
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 10) {
+                                    etiquetaFiltro("RIESGO")
+                                    ForEach(opcionesRiesgo, id: \.self) { opcion in
+                                        ChipFiltro(texto: opcion, seleccionado: filtroRiesgo == opcion) {
+                                            filtroRiesgo = opcion
+                                        }
+                                    }
+
+                                    Divider()
+                                        .frame(height: 24)
+                                        .padding(.horizontal, 6)
+
+                                    etiquetaFiltro("MÉTODO")
+                                    ForEach(opcionesMetodo, id: \.self) { opcion in
+                                        ChipFiltro(texto: opcion, seleccionado: filtroMetodo == opcion) {
+                                            filtroMetodo = opcion
+                                        }
                                     }
                                 }
 
-                                Divider()
-                                    .frame(height: 24)
-                                    .padding(.horizontal, 6)
-
-                                etiquetaFiltro("MÉTODO")
-                                ForEach(opcionesMetodo, id: \.self) { opcion in
-                                    ChipFiltro(texto: opcion, seleccionado: filtroMetodo == opcion) {
-                                        filtroMetodo = opcion
+                                HStack(spacing: 10) {
+                                    etiquetaFiltro("CASO")
+                                    ChipFiltro(texto: "Todos", seleccionado: filtroCaso == nil) {
+                                        filtroCaso = nil
                                     }
-                                }
-                            }
-
-                            HStack(spacing: 10) {
-                                etiquetaFiltro("CASO")
-                                ChipFiltro(texto: "Todos", seleccionado: filtroCaso == nil) {
-                                    filtroCaso = nil
-                                }
-                                ForEach(opcionesCaso) { opcion in
-                                    ChipFiltro(texto: opcion.nombre, seleccionado: filtroCaso == opcion.id) {
-                                        filtroCaso = opcion.id
+                                    ForEach(opcionesCaso) { opcion in
+                                        ChipFiltro(texto: opcion.nombre, seleccionado: filtroCaso == opcion.id) {
+                                            filtroCaso = opcion.id
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // Tabla
-                    if isLoading && donantes.isEmpty {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 48)
-                    } else if let errorMessage = errorMessage, donantes.isEmpty {
-                        MensajeError(mensaje: errorMessage) {
-                            Task {
-                                await cargarDonantes()
+                        if isLoading && donantes.isEmpty {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 48)
+                        } else if let errorMessage = errorMessage, donantes.isEmpty {
+                            MensajeError(mensaje: errorMessage) {
+                                Task {
+                                    await cargarDonantes()
+                                }
                             }
+                        } else {
+                            VStack(spacing: 0) {
+                                encabezadoTabla
+
+                                if donantesFiltrados.isEmpty {
+                                    Divider()
+                                    Text(donantes.isEmpty
+                                         ? "No hay donantes registrados."
+                                         : "No hay donantes con estos filtros.")
+                                        .font(.body)
+                                        .foregroundColor(Palette.textoSecundario)
+                                        .padding(32)
+                                }
+
+                                ForEach(donantesFiltrados) { donante in
+                                    Divider()
+                                    NavigationLink {
+                                        DonanteDetalleView(donante: donante)
+                                    } label: {
+                                        DonanteRow(donante: donante)
+                                            .background(Palette.superficie)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .background(Palette.superficie)
+                            .clipShape(.rect(cornerRadius: 16))
                         }
-                    } else {
-                        VStack(spacing: 0) {
-                            encabezadoTabla
-
-                            if donantesFiltrados.isEmpty {
-                                Divider()
-                                Text(donantes.isEmpty
-                                     ? "No hay donantes registrados."
-                                     : "No hay donantes con estos filtros.")
-                                    .font(.body)
-                                    .foregroundColor(Palette.textoSecundario)
-                                    .padding(32)
-                            }
-
-                            ForEach(donantesFiltrados) { donante in
-                                Divider()
-                                DonanteRow(donante: donante)
-                            }
-                        }
-                        .background(Palette.superficie)
-                        .clipShape(.rect(cornerRadius: 16))
                     }
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 24)
                 }
-                .padding(.horizontal, 32)
-                .padding(.vertical, 24)
+                .refreshable {
+                    await cargarDonantes()
+                }
             }
-            .refreshable {
-                await cargarDonantes()
-            }
+            .toolbar(.hidden)
         }
         .task {
-            // Solo la primera vez; después se actualiza deslizando hacia abajo
             if !hasLoaded {
                 hasLoaded = true
                 await cargarDonantes()
@@ -185,7 +184,6 @@ struct DonantesView: View {
             .frame(width: 72, alignment: .leading)
     }
 
-    // Mismos anchos de columna que DonanteRow para que queden alineadas
     var encabezadoTabla: some View {
         HStack(spacing: 16) {
             Text("\(donantesFiltrados.count) DONANTES")
@@ -198,6 +196,8 @@ struct DonantesView: View {
                 .frame(width: 110, alignment: .trailing)
             Text("RIESGO")
                 .frame(width: 90, alignment: .trailing)
+            Spacer()
+                .frame(width: 12)
         }
         .font(.footnote)
         .bold()

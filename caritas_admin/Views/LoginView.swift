@@ -3,6 +3,7 @@ import SwiftUI
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
+    @State private var mostrarPassword = false
     @State private var isLoading = false
 
     @State private var showAlert = false
@@ -14,65 +15,123 @@ struct LoginView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
-                    Image(systemName: "heart.text.square.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(Palette.acento)
-                        .padding(.top, 80)
+                VStack(spacing: 32) {
+                    VStack(spacing: 16) {
+                        Image(systemName: "pawprint.fill")
+                            .font(.system(size: 56))
+                            .foregroundColor(Palette.acento)
+                            .frame(width: 112, height: 112)
+                            .background(Palette.acentoClaro)
+                            .clipShape(.circle)
 
-                    VStack(spacing: 8) {
-                        Text("Cáritas de Monterrey")
-                            .font(.largeTitle)
-                            .bold()
-                            .foregroundColor(Palette.textoPrincipal)
-                        Text("Panel de administración")
-                            .font(.title3)
-                            .foregroundColor(Palette.textoSecundario)
-                    }
-
-                    VStack(spacing: 12) {
-                        // Sin modificadores exclusivos de iOS: el target también compila para macOS
-                        TextField("Correo electrónico", text: $email)
-                            .textContentType(.username)
-                            .autocorrectionDisabled()
-                            .padding(.horizontal, 16)
-                            .frame(minHeight: 52)
-                            .background(Palette.superficie)
-                            .clipShape(.rect(cornerRadius: 12))
-
-                        SecureField("Contraseña", text: $password)
-                            .textContentType(.password)
-                            .padding(.horizontal, 16)
-                            .frame(minHeight: 52)
-                            .background(Palette.superficie)
-                            .clipShape(.rect(cornerRadius: 12))
-                    }
-
-                    Button {
-                        Task {
-                            await iniciarSesion()
-                        }
-                    } label: {
-                        if isLoading {
-                            ProgressView()
-                                .tint(Palette.superficie)
-                                .frame(maxWidth: .infinity)
-                                .frame(minHeight: 52)
-                        } else {
-                            Text("Iniciar sesión")
-                                .font(.headline)
-                                .foregroundColor(Palette.superficie)
-                                .frame(maxWidth: .infinity)
-                                .frame(minHeight: 52)
+                        VStack(spacing: 6) {
+                            Text("Cáritas de Monterrey")
+                                .font(.largeTitle)
+                                .bold()
+                                .foregroundColor(Palette.textoPrincipal)
+                            Text("Panel de administración")
+                                .font(.title3)
+                                .foregroundColor(Palette.textoSecundario)
                         }
                     }
-                    .buttonStyle(.plain)
-                    .background(Palette.acento)
-                    .clipShape(.rect(cornerRadius: 12))
-                    .disabled(isLoading)
+
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Correo electrónico")
+                                .font(.subheadline)
+                                .bold()
+                                .foregroundColor(Palette.textoSecundario)
+
+                            HStack(spacing: 12) {
+                                Image(systemName: "envelope")
+                                    .foregroundColor(Palette.textoSecundario)
+                                    .frame(width: 24)
+                                TextField("nombre@caritas.org.mx", text: $email)
+                                    .textContentType(.username)
+                                #if os(iOS)
+                                    .keyboardType(.emailAddress)
+                                    .textInputAutocapitalization(.never)
+                                #endif
+                                    .autocorrectionDisabled()
+                            }
+                            .padding(.horizontal, 16)
+                            .frame(minHeight: 52)
+                            .background(Palette.fondo)
+                            .clipShape(.rect(cornerRadius: 12))
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Contraseña")
+                                .font(.subheadline)
+                                .bold()
+                                .foregroundColor(Palette.textoSecundario)
+
+                            HStack(spacing: 12) {
+                                Image(systemName: "lock")
+                                    .foregroundColor(Palette.textoSecundario)
+                                    .frame(width: 24)
+
+                                if mostrarPassword {
+                                    TextField("Tu contraseña", text: $password)
+                                        .textContentType(.password)
+                                        .autocorrectionDisabled()
+                                } else {
+                                    SecureField("Tu contraseña", text: $password)
+                                        .textContentType(.password)
+                                }
+
+                                Button {
+                                    mostrarPassword.toggle()
+                                } label: {
+                                    Image(systemName: mostrarPassword ? "eye.slash" : "eye")
+                                        .foregroundColor(Palette.textoSecundario)
+                                        .frame(width: 44, height: 44)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.leading, 16)
+                            .padding(.trailing, 4)
+                            .frame(minHeight: 52)
+                            .background(Palette.fondo)
+                            .clipShape(.rect(cornerRadius: 12))
+                        }
+
+                        Button {
+                            Task {
+                                await iniciarSesion()
+                            }
+                        } label: {
+                            if isLoading {
+                                ProgressView()
+                                    .tint(Palette.superficie)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(minHeight: 52)
+                            } else {
+                                Text("Iniciar sesión")
+                                    .font(.headline)
+                                    .foregroundColor(Palette.superficie)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(minHeight: 52)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .background(Palette.acento)
+                        .clipShape(.rect(cornerRadius: 12))
+                        .disabled(isLoading)
+                        .padding(.top, 8)
+                    }
+                    .padding(32)
+                    .background(Palette.superficie)
+                    .clipShape(.rect(cornerRadius: 28))
+
+                    Text("Acceso exclusivo para el personal de Cáritas de Monterrey.")
+                        .font(.footnote)
+                        .foregroundColor(Palette.textoSecundario)
+                        .multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: 420)
+                .frame(maxWidth: 460)
                 .padding(.horizontal, 32)
+                .padding(.vertical, 80)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -82,7 +141,6 @@ struct LoginView: View {
     }
 
     func iniciarSesion() async {
-        // En minúsculas por si el teclado puso la primera letra en mayúscula
         let correo = email.trimmingCharacters(in: .whitespaces).lowercased()
 
         if correo.isEmpty {
@@ -107,7 +165,6 @@ struct LoginView: View {
         do {
             let respuesta = try await AuthService.login(email: correo, password: password)
             isLoading = false
-            // RaizView detecta la sesión activa y muestra las pestañas
             UserSessionHelper.iniciarSesion(token: respuesta.token, usuario: respuesta.user)
         } catch let error as APIError {
             isLoading = false

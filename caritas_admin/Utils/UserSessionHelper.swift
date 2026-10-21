@@ -1,7 +1,5 @@
 import Foundation
 
-// Datos no sensibles del usuario en UserDefaults. Las vistas los leen con
-// @AppStorage usando estas mismas llaves, así se actualizan solas.
 struct UserSessionHelper {
     static let sesionActivaKey = "sesionActiva"
     static let nombreKey = "usuarioNombre"
@@ -20,8 +18,6 @@ struct UserSessionHelper {
         UserDefaults.standard.set(true, forKey: sesionActivaKey)
     }
 
-    // Botón "Cerrar sesión" y cualquier 401 del API. RaizView detecta el
-    // cambio de sesionActiva y regresa a LoginView.
     static func cerrarSesion() {
         KeychainHelper.borrarToken()
         UserDefaults.standard.removeObject(forKey: nombreKey)

@@ -2,17 +2,17 @@ import Foundation
 
 struct Caso: Identifiable, Codable {
     var id: Int
-    var clave: String          // "CO", "BE", "DE", "CH"
-    var nombre: String         // "Comedor Comunitario San Bernabé"
-    var nombreCorto: String    // "Comedor"
-    var beneficiarios: String  // "240 familias de la zona norte"
+    var clave: String
+    var nombre: String
+    var nombreCorto: String
+    var beneficiarios: String
     var objetivo: String
     var recaudado: Double
     var meta: Double
     var responsable: String
     var lugar: String
+    var fechaFin: Date? = nil
 
-    // Porcentaje redondeado de avance (0 a 100)
     var porcentaje: Int {
         if meta == 0 {
             return 0
@@ -21,8 +21,6 @@ struct Caso: Identifiable, Codable {
     }
 }
 
-// JSON de GET /causas. Los montos llegan como texto decimal ("220000.00") y
-// varios campos pueden venir null, por eso se decodifica aquí y se convierte a Caso.
 struct CausaRespuesta: Codable {
     var id: Int
     var titulo: String
@@ -34,6 +32,7 @@ struct CausaRespuesta: Codable {
     var lugar: String?
     var clave: String?
     var nombreCorto: String?
+    var fechaFin: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -46,6 +45,7 @@ struct CausaRespuesta: Codable {
         case lugar
         case clave
         case nombreCorto = "nombre_corto"
+        case fechaFin = "fecha_fin"
     }
 
     var caso: Caso {
@@ -59,7 +59,8 @@ struct CausaRespuesta: Codable {
             recaudado: Double(montoRecaudado ?? "") ?? 0,
             meta: Double(montoObjetivo) ?? 0,
             responsable: responsable ?? "Sin registro",
-            lugar: lugar ?? "Sin registro"
+            lugar: lugar ?? "Sin registro",
+            fechaFin: fechaFinDesdeAPI(fechaFin ?? "")
         )
     }
 }

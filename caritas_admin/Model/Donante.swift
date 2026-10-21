@@ -4,16 +4,17 @@ struct Donante: Identifiable, Codable {
     var id: Int
     var nombre: String
     var colonia: String?
-    var metodoPago: String       // "Efectivo", "SPEI" o "—"
+    var metodoPago: String
     var casoId: Int?
     var casoClave: String?
     var casoNombreCorto: String?
-    var monto: Double?           // monto del último donativo
+    var monto: Double?
     var ultimoDonativo: Date?
-    var riesgo: String           // "Bajo", "Medio" o "Alto"
+    var riesgo: String
+    var casoNombre: String? = nil
+    var diasSinDonar: Int? = nil
 }
 
-// JSON de GET /admin/donors
 struct DonanteRespuesta: Codable {
     var id: Int
     var fullName: String
@@ -46,7 +47,9 @@ struct DonanteRespuesta: Codable {
             casoNombreCorto: causa?.nombreCorto ?? causa?.titulo,
             monto: lastDonationAmount.flatMap { Double($0) },
             ultimoDonativo: lastDonationAt.flatMap { fechaDesdeAPI($0) },
-            riesgo: textoRiesgo
+            riesgo: textoRiesgo,
+            casoNombre: causa?.titulo,
+            diasSinDonar: risk.daysWithoutDonating
         )
     }
 
@@ -82,7 +85,7 @@ struct CausaResumen: Codable {
 }
 
 struct RiesgoRespuesta: Codable {
-    var level: String               // "green", "yellow" o "red"
+    var level: String
     var daysWithoutDonating: Int?
 
     enum CodingKeys: String, CodingKey {

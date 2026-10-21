@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Tarjeta de error con botón para volver a intentar la petición
 struct MensajeError: View {
     var mensaje: String
     var reintentar: () -> Void

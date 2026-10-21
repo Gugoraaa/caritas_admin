@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Cuadro con la clave del caso ("CO", "BE"...) en su color
 struct ClaveCaso: View {
     var clave: String
     var casoId: Int
